@@ -1,0 +1,8 @@
+_*
+cred.json
+*.zip
+*.done
+old/
+pkg/
+attic/
+vendor/
