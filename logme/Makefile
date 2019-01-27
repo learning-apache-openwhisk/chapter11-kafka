@@ -1,4 +1,13 @@
+.PHONY: deploy send poll
+MSG?=hello
+
 deploy: trigger.done
+send:
+	wsk action invoke demoq/messageHubProduce \
+	-P ../cred.json -p topic queue -p value "$(MSG)"
+
+poll:
+	wsk activation poll mesg/logme
 
 bind.done:
 	wsk package bind /whisk.system/messaging demoq -P ../cred.json
@@ -16,15 +25,9 @@ trigger.done: bind.done logme.done
 	wsk rule update messages-trigger-logme messages-trigger mesg/logme
 	wsk rule enable messages-trigger-logme
 
-test-produce:
-	wsk action invoke demoq/messageHubProduce \
-	-P ../cred.json -p topic queue -p value "$(shell date)"
 
-poll_all:
-	wsk activation poll
 
-poll_logme:
-	wsk activation poll mesg/logme
+
 
 clean:
 	-wsk rule delete messages-queue-echo
