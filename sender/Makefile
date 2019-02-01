@@ -12,21 +12,20 @@ send:
 sender.done: sender.zip
 	wsk action update mesg/sender $< \
 	--docker $(IMG) --web true \
-	-P ../cred.json -p topic queue && \
+	-P ../cred.json -p isJson false -p topic queue -p partition 0 && \
 	touch sender.done
-
 
 sender.zip: sender_src.zip
 	docker run -i $(IMG) -compile main <$< >$@
 
-sender_src.zip: | src/klient/vendor
-	cd src ; zip -r ../$@ sender.go klient
+sender_src.zip: src/main/sender.go src/main/send.go | src/main/vendor
+	cd src ; zip -r  ../$@ main -x main/main.go -x '*_test'
 
-src/klient/vendor:
-	export GOPATH="$(shell pwd)" ; cd src/klient ;  dep ensure
+src/main/vendor:
+	export GOPATH="$(shell pwd)" ; cd src/main ;  dep ensure
 
 clean:
-	-wsk delete mesg/sender
+	-wsk action delete mesg/sender
 	-rm *.zip *.done
 	-rm -Rvf src/ksend/vendor
 

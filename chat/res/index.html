@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Chat</title>
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+	<nav class="navbar navbar-inverse">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+				 aria-controls="navbar">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">WhiskChat</a>
+			</div>
+			<div id="navbar" class="navbar-collapse collapse">
+				<form id="form" class="navbar-form navbar-right">
+					<div class="form-group">
+						<input id="nick" type="text" placeholder="Nickname" class="form-control">
+						<input id="pass" type="password" placeholder="Password" class="form-control">
+					</div>
+					<button id="join" type="button" class="btn btn-success">Join</button>
+				</form>
+			</div>
+			<!--/.navbar-collapse -->
+		</div>
+	</nav>
+
+	<div class="container" role="main">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="form-group">
+					<label for="comment">Chat Room</label>
+					<textarea class="form-control" rows="15" id="room" readonly></textarea>
+				</div>
+				<div class="input-group">
+					<span id="me" class="input-group-addon"></span>
+					<input id="message" type="text" class="form-control" 
+					       placeholder="say something" disabled="true">
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="jquery-1.12.4.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<script src="main.js"></script>
+</body>
+</html>

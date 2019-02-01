@@ -1,32 +1,10 @@
-package klient
+package main
 
 import (
 	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
-
-func config(args map[string]interface{}) *kafka.ConfigMap {
-	// extract broker list from map
-	brokers := ""
-	for i, s := range args["kafka_brokers_sasl"].([]interface{}) {
-		if i == 0 {
-			brokers = s.(string)
-		} else {
-			brokers += "," + s.(string)
-		}
-	}
-	// generate configuration
-	config := kafka.ConfigMap{
-		"bootstrap.servers": brokers,
-		"security.protocol": "sasl_ssl",
-		"sasl.mechanisms":   "PLAIN",
-		"sasl.username":     args["user"],
-		"sasl.password":     args["password"],
-	}
-
-	return &config
-}
 
 var producer *kafka.Producer
 
@@ -36,8 +14,27 @@ func Producer(args map[string]interface{}) *kafka.Producer {
 		return producer
 	}
 
+	// extract broker list from map
+	brokers := ""
+	for i, s := range args["kafka_brokers_sasl"].([]interface{}) {
+		if i == 0 {
+			brokers = s.(string)
+		} else {
+			brokers += "," + s.(string)
+		}
+	}
+
+	// generate configuration
+	config := kafka.ConfigMap{
+		"bootstrap.servers": brokers,
+		"security.protocol": "sasl_ssl",
+		"sasl.mechanisms":   "PLAIN",
+		"sasl.username":     args["user"],
+		"sasl.password":     args["password"],
+	}
+
 	// create a producer and return it
-	p, err := kafka.NewProducer(config(args))
+	p, err := kafka.NewProducer(&config)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -50,10 +47,11 @@ func Producer(args map[string]interface{}) *kafka.Producer {
 var deliveryChan chan kafka.Event
 
 // Send a message
-func Send(p *kafka.Producer, topic string, msg []byte, partition int32) error {
+func Send(p *kafka.Producer, topic string, partition int, message []byte) error {
 	p.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: partition},
-		Value:          []byte(msg),
+		TopicPartition: kafka.TopicPartition{
+			Topic: &topic, Partition: int32(partition)},
+		Value: message,
 	}, deliveryChan)
 	e := <-deliveryChan
 	m := e.(*kafka.Message)
