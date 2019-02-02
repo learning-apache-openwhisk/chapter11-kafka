@@ -1,3 +1,4 @@
+#IMG=openwhisk/actionloop-golang-v1.11
 IMG=actionloop/golang-v1.11:ws4
 MSG?=hello
 
