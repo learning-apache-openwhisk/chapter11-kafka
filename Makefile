@@ -2,6 +2,7 @@ deploy:
 	$(MAKE) -C sender
 	$(MAKE) -C receiver
 	$(MAKE) -C chat
+	
 
 clean:
 	$(MAKE) clean -C sender

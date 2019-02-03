@@ -6,23 +6,14 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-var producer *kafka.Producer
-
-// Producer returns a producer to Kafka in a persistent way
-func Producer(args map[string]interface{}) *kafka.Producer {
-	if producer != nil {
-		return producer
-	}
+func configProducer(args map[string]interface{}) *kafka.ConfigMap {
 
 	// extract broker list from map
 	brokers := ""
-	for i, s := range args["kafka_brokers_sasl"].([]interface{}) {
-		if i == 0 {
-			brokers = s.(string)
-		} else {
-			brokers += "," + s.(string)
-		}
+	for _, s := range args["kafka_brokers_sasl"].([]interface{}) {
+		brokers += s.(string) + ","
 	}
+	brokers = brokers[0 : len(brokers)-1]
 
 	// generate configuration
 	config := kafka.ConfigMap{
@@ -32,9 +23,20 @@ func Producer(args map[string]interface{}) *kafka.Producer {
 		"sasl.username":     args["user"],
 		"sasl.password":     args["password"],
 	}
+	return &config
+}
+
+var producer *kafka.Producer
+var deliveryChan chan kafka.Event
+
+// Producer returns a producer to Kafka in a persistent way
+func Producer(args map[string]interface{}) *kafka.Producer {
+	if producer != nil {
+		return producer
+	}
 
 	// create a producer and return it
-	p, err := kafka.NewProducer(&config)
+	p, err := kafka.NewProducer(configProducer(args))
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -44,15 +46,17 @@ func Producer(args map[string]interface{}) *kafka.Producer {
 	return producer
 }
 
-var deliveryChan chan kafka.Event
-
 // Send a message
 func Send(p *kafka.Producer, topic string, partition int, message []byte) error {
-	p.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{
-			Topic: &topic, Partition: int32(partition)},
-		Value: message,
-	}, deliveryChan)
+	tp := kafka.TopicPartition{
+		Topic:     &topic,
+		Partition: int32(partition),
+	}
+	msg := &kafka.Message{
+		TopicPartition: tp,
+		Value:          message,
+	}
+	p.Produce(msg, deliveryChan)
 	e := <-deliveryChan
 	m := e.(*kafka.Message)
 	return m.TopicPartition.Error

@@ -12,12 +12,11 @@ console.log(base)
 var sender = base + "/sender"
 var receiver = base + "/receiver"
 var nickname = ""
-var password = ""
+var group = ""
 
 // poll the chat
 function poll() {
-	$.post(receiver, 
-		{"nick": nickname, "pass": password},  
+	$.post(receiver, {"group": group},  
 		function (data) {
 			//console.log(data)
 			if(data.messages.lenght==0)
@@ -40,25 +39,24 @@ function join() {
 		alert("Please specify nickname and password")
 		return
 	}
-	// first connection, checking the password
-	$.post(receiver,
-		{"nick": nick, "pass": pass},
+	// first connection, get the group
+	$.post(receiver, {"nick": nick, "pass": pass},
 		function(data) {
 			//console.log(data)
 			if(data.error) {
 				alert(data.error)
 				return
 			}
-			// logged in, initialize 
-			nickname = nick
-			password = pass
-			$("#form").hide()
-			$("#me").text(nick)
-			$("#message").removeAttr("disabled")
-			if(data.messages)			
-				$("#room").text(data.messages.join("\n")+"\n")
-			$.post(sender, {"message": "**** "+nick +" joined ****"})
-			setInterval(poll, 3000)
+			// logged in, initialize
+			if(data.group) { 
+				nickname = nick
+				group = data.group
+				$("#form").hide()
+				$("#me").text(nick)
+				$("#message").removeAttr("disabled")
+				$.post(sender, {"message": "**** "+nick +" joined ****"})
+				setInterval(poll, 3000)
+			}
 		})
 }
 

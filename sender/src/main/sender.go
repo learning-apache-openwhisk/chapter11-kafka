@@ -30,12 +30,10 @@ func Main(args map[string]interface{}) map[string]interface{} {
 	}
 
 	// sending the message
-	//part, _ := strconv.Atoi(partition)
 	err := Send(p, topic, int(partition), []byte(message))
 	if err != nil {
 		return mkErr(err.Error())
 	}
-	p.Flush(10)
 
 	return map[string]interface{}{
 		"body": "OK",

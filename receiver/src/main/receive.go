@@ -6,21 +6,14 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-var consumers = make(map[string]*kafka.Consumer)
-var passwords = make(map[string]string)
-
-// Config builds a config map from args
-func Config(args map[string]interface{}) *kafka.ConfigMap {
+func configConsumer(args map[string]interface{}) *kafka.ConfigMap {
 
 	// extract broker list from map
 	brokers := ""
-	for i, s := range args["kafka_brokers_sasl"].([]interface{}) {
-		if i == 0 {
-			brokers = s.(string)
-		} else {
-			brokers += "," + s.(string)
-		}
+	for _, s := range args["kafka_brokers_sasl"].([]interface{}) {
+		brokers += s.(string) + ","
 	}
+	brokers = brokers[0 : len(brokers)-1]
 
 	// generate configuration
 	config := kafka.ConfigMap{
@@ -36,36 +29,39 @@ func Config(args map[string]interface{}) *kafka.ConfigMap {
 		"enable.partition.eof":            true,
 		"enable.auto.commit":              true,
 	}
-
 	return &config
 }
 
+var consumers = map[string]*kafka.Consumer{}
+
 // Consumer return a consumer by nick and check the password
-func Consumer(config *kafka.ConfigMap, topic string, partition int32, nick string, pass string) *kafka.Consumer {
+func Consumer(config *kafka.ConfigMap, topic string, partition int32, group string) *kafka.Consumer {
 
 	// return cached consumer, if any
-	if consumer, ok := consumers[nick]; ok {
-		if passwords[nick] == pass {
-			return consumer
-		}
-		return nil
+	if consumer, ok := consumers[group]; ok {
+		log.Printf("retrieved consumer %s", group)
+		return consumer
 	}
 
 	// not found in cache,
 	// create a consumer and return it
-	config.SetKey("group.id", nick)
+	config.SetKey("group.id", group)
+	log.Printf("config %v", config)
 	consumer, err := kafka.NewConsumer(config)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	// cache values and subscribe
-	consumers[nick] = consumer
-	passwords[nick] = pass
 	// assign to a specific topic and partition
-	assignment := []kafka.TopicPartition{{Topic: &topic, Partition: partition}}
+	assignment := []kafka.TopicPartition{{
+		Topic:     &topic,
+		Partition: partition}}
 	consumer.Assign(assignment)
+	consumers[group] = consumer
+
+	// cache values and subscribe
+	log.Printf("created consumer %s for %s:%d ", group, topic, partition)
 	return consumer
 }
 
@@ -78,8 +74,6 @@ func Receive(c *kafka.Consumer) []string {
 			switch e := ev.(type) {
 			case *kafka.Message:
 				messages = append(messages, string(e.Value))
-			case kafka.PartitionEOF:
-				return messages
 			}
 		default:
 			return messages

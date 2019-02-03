@@ -1,3 +1,4 @@
+#IMG=openwhisk/actionloop-golang-v1.11
 IMG=actionloop/golang-v1.11:ws4
 
 .PHONY: url
@@ -14,7 +15,7 @@ receiver.done: receiver.zip
 receiver.zip: receiver_src.zip
 	docker run -i $(IMG) -compile main <$< >$@
 
-receiver_src.zip: src/main/receiver.go | src/main/vendor
+receiver_src.zip: src/main/receiver.go src/main/receive.go | src/main/vendor
 	cd src ; zip -r ../$@ main -x main/main.go
 
 src/main/vendor:
