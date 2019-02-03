@@ -1,5 +1,5 @@
 #IMG=openwhisk/actionloop-golang-v1.11
-IMG=actionloop/golang-v1.11:ws4
+IMG=actionloop/golang-v1.11:librdkafka
 MSG?=hello
 
 .PHONY: url send
@@ -13,7 +13,7 @@ send:
 sender.done: sender.zip
 	wsk action update mesg/sender $< \
 	--docker $(IMG) --web true \
-	-P ../cred.json -p isJson false -p topic queue -p partition 0 && \
+	-P ../cred.json -p topic queue -p partition 0 && \
 	touch sender.done
 
 sender.zip: sender_src.zip

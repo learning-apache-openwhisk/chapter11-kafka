@@ -1,5 +1,5 @@
 #IMG=openwhisk/actionloop-golang-v1.11
-IMG=actionloop/golang-v1.11:ws4
+IMG=actionloop/golang-v1.11:librdkafka
 
 .PHONY: url
 
@@ -9,7 +9,8 @@ url: receiver.done
 receiver.done: receiver.zip
 	wsk action update mesg/receiver $< \
 	--docker $(IMG) --web true \
-	-P ../cred.json -p topic queue -p partition 0 && \
+	-P ../cred.json -p secret s3cr3t \
+	-p topic queue -p partition 0 && \
 	touch receiver.done
 
 receiver.zip: receiver_src.zip

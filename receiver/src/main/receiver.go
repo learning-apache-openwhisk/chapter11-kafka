@@ -17,22 +17,8 @@ func mkBody(key string, value interface{}) map[string]interface{} {
 	}
 }
 
-var passwords = map[string]string{}
+// generate a random number to be used as grop name
 var generator = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-// Login checks for authentication and return a group for each user
-// cache the password of a never-seen-before user for reuse
-func Login(nick string, pass string) map[string]interface{} {
-	if password, ok := passwords[nick]; ok {
-		if pass != password {
-			return mkBody("error", "bad username or password")
-		}
-	} else {
-		passwords[nick] = pass
-	}
-	group := fmt.Sprintf("g%d", generator.Uint64())
-	return mkBody("group", group)
-}
 
 // Main received messages using a consumer for nickname
 func Main(args map[string]interface{}) map[string]interface{} {
@@ -51,12 +37,14 @@ func Main(args map[string]interface{}) map[string]interface{} {
 		return mkBody("error", "partition required")
 	}
 
-	// handle nickname protection
-	if nick, ok := args["nick"].(string); ok {
-		if pass, ok := args["pass"].(string); ok {
-			return Login(nick, pass)
+	// handle password protection
+	if pass, ok := args["pass"].(string); ok {
+		if pass == args["secret"] {
+			// authorized, generate group
+			group := fmt.Sprintf("g%d", generator.Uint64())
+			return mkBody("group", group)
 		}
-		return mkBody("error", "nick and pass required")
+		return mkBody("error", "bad password")
 	}
 
 	// check there is the group then handle receive

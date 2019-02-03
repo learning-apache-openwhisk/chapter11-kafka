@@ -40,7 +40,7 @@ function join() {
 		return
 	}
 	// first connection, get the group
-	$.post(receiver, {"nick": nick, "pass": pass},
+	$.post(receiver, {"pass": pass},
 		function(data) {
 			//console.log(data)
 			if(data.error) {
